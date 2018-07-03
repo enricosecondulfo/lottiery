@@ -125,6 +125,46 @@
           }
         }
       }
+    },
+    "lottiery-lib": {
+      "root": "projects/lottiery-lib",
+      "sourceRoot": "projects/lottiery-lib/src",
+      "projectType": "library",
+      "prefix": "lib",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-ng-packagr:build",
+          "options": {
+            "tsConfig": "projects/lottiery-lib/tsconfig.lib.json",
+            "project": "projects/lottiery-lib/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "project": "projects/lottiery-lib/ng-package.prod.json"
+            }
+          }
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "main": "projects/lottiery-lib/src/test.ts",
+            "tsConfig": "projects/lottiery-lib/tsconfig.spec.json",
+            "karmaConfig": "projects/lottiery-lib/karma.conf.js"
+          }
+        },
+        "lint": {
+          "builder": "@angular-devkit/build-angular:tslint",
+          "options": {
+            "tsConfig": [
+              "projects/lottiery-lib/tsconfig.lib.json",
+              "projects/lottiery-lib/tsconfig.spec.json"
+            ],
+            "exclude": [
+              "**/node_modules/**"
+            ]
+          }
+        }
+      }
     }
   },
   "defaultProject": "lottiery"
