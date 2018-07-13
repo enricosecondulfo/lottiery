@@ -6,9 +6,13 @@ import {
   ElementRef,
   OnDestroy,
   NgZone,
-  ChangeDetectionStrategy
+  ChangeDetectionStrategy,
+  Output,
+  EventEmitter
 } from '@angular/core';
 import * as Lottie from 'lottie-web';
+import { Subject, Observable } from '../../../../node_modules/rxjs';
+import { takeUntil } from '../../../../node_modules/rxjs/operators';
 
 @Component({
   selector: 'lottiery-view',
@@ -22,14 +26,21 @@ export class LottieryView implements AfterViewInit, OnDestroy {
   @Input() autoPlay: boolean;
   @Input() speed: number;
 
+  @Output() complete: EventEmitter<void>;
+
   @ViewChild('lottieryContainer') container: ElementRef;
 
   private animation: any;
+  private onDestroy$: Subject<boolean>;
 
-  constructor(private ngZone: NgZone) {}
+  constructor(private ngZone: NgZone) {
+    this.complete = new EventEmitter<void>();
+    this.onDestroy$ = new Subject<boolean>();
+  }
 
   ngAfterViewInit(): void {
     this.create();
+    this.addListeners();
   }
 
   create(): void {
@@ -48,8 +59,26 @@ export class LottieryView implements AfterViewInit, OnDestroy {
     this.animation.play();
   }
 
+  private addListeners(): void {
+    this.createObservable<void>('complete')
+      .pipe(takeUntil(this.onDestroy$))
+      .subscribe(_ => this.complete.emit(null));
+  }
+
+  private createObservable<T>(eventName: string): Observable<T> {
+    const event: Subject<T> = new Subject<T>();
+
+    this.animation.addEventListener(eventName, () => {
+      event.next();
+    });
+
+    return event;
+  }
+
   ngOnDestroy(): void {
     console.log('on destroy');
+
     this.animation.destroy();
+    this.onDestroy$.next(null);
   }
 }

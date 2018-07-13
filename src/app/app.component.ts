@@ -22,4 +22,8 @@ export class AppComponent {
   state = 0;
 
   numbers: number[];
+
+  onComplete(): void {
+    console.log('completed animation');
+  }
 }

@@ -4,35 +4,46 @@ import {
   HostListener,
   ViewChild,
   ElementRef,
-  AfterViewInit
+  AfterViewInit,
+  Output,
+  EventEmitter,
+  OnDestroy
 } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Observable, Subject } from 'rxjs';
 import * as Lottie from 'lottie-web';
-import { filter } from 'rxjs/operators';
+import { filter, takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'lottiery-button',
   templateUrl: './button.html',
   styleUrls: ['./button.scss']
 })
-export class LottieryButton implements AfterViewInit {
+export class LottieryButton implements AfterViewInit, OnDestroy {
   @Input() path: string;
   @Input() firstState: [number, number];
   @Input() lastState: [number, number];
   @Input() speed: number;
 
+  @Output() complete: EventEmitter<void>;
+
   @ViewChild('lottieryContainer') container: ElementRef;
 
   private animation: any;
-  private isReady: BehaviorSubject<boolean>;
   private state = false;
 
+  private isReady$: BehaviorSubject<boolean>;
+  private onDestroy$: Subject<boolean>;
+
   constructor() {
-    this.isReady = new BehaviorSubject<boolean>(false);
+    this.complete = new EventEmitter<void>();
+
+    this.isReady$ = new BehaviorSubject<boolean>(false);
+    this.onDestroy$ = new Subject<boolean>();
   }
 
   ngAfterViewInit(): void {
     this.create();
+    this.addListeners();
   }
 
   create(): void {
@@ -45,14 +56,21 @@ export class LottieryButton implements AfterViewInit {
     };
 
     this.animation = Lottie.loadAnimation(options);
+  }
+
+  addListeners() {
     this.animation.addEventListener('DOMLoaded', () => {
-      this.isReady.next(true);
+      this.isReady$.next(true);
     });
+
+    this.createObservable<void>('complete')
+      .pipe(takeUntil(this.onDestroy$))
+      .subscribe(_ => this.complete.emit(null));
   }
 
   @HostListener('click')
-  private onClick(): void {
-    this.isReady.pipe(filter(state => state === true)).subscribe(() => {
+  onClick(): void {
+    this.isReady$.pipe(filter(state => state === true)).subscribe(() => {
       this.animation.setDirection(this.state ? -1 : 1);
       this.animation.play();
       /* this.animation.playSegments(
@@ -62,5 +80,19 @@ export class LottieryButton implements AfterViewInit {
 
       this.state = !this.state;
     });
+  }
+
+  private createObservable<T>(eventName: string): Observable<T> {
+    const event: Subject<T> = new Subject<T>();
+
+    this.animation.addEventListener(eventName, () => {
+      event.next();
+    });
+
+    return event;
+  }
+
+  ngOnDestroy(): void {
+    this.onDestroy$.next(null);
   }
 }
