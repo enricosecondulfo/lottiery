@@ -7,5 +7,6 @@ export * from './view/view';
 
 export * from './state-view/state-view.module';
 export * from './state-view/state-view';
+export * from './state-view/step';
 
 export * from './button/button.module';

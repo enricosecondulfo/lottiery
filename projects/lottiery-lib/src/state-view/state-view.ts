@@ -9,21 +9,32 @@ import {
   SimpleChanges
 } from '@angular/core';
 import * as Lottie from 'lottie-web';
-import { Subject, pipe, BehaviorSubject } from 'rxjs';
+import { BehaviorSubject } from 'rxjs';
 import { filter } from 'rxjs/operators';
+import { Step } from './step';
 
 @Component({
   selector: 'lottiery-state-view',
   templateUrl: './state-view.html'
 })
 export class LottieryStateView implements AfterViewInit, OnChanges, OnDestroy {
-  @Input() path: string;
-  @Input() prerender: string;
-  @Input() speed: number;
-  @Input() steps: [number, number][];
-  @Input() state: number;
+  @Input()
+  path: string;
 
-  @ViewChild('lottieryContainer') container: ElementRef;
+  @Input()
+  prerender: string;
+
+  @Input()
+  speed: number;
+
+  @Input()
+  steps: Step[];
+
+  @Input()
+  state: number;
+
+  @ViewChild('lottieryContainer')
+  container: ElementRef;
 
   private animation: any;
   private isReady: BehaviorSubject<boolean>;
@@ -49,18 +60,12 @@ export class LottieryStateView implements AfterViewInit, OnChanges, OnDestroy {
     this.animation.addEventListener('DOMLoaded', () => {
       this.isReady.next(true);
     });
-
-    /* this.animation.setSpeed(this.speed || 1);
-
-    if (this.state !== undefined) {
-      this.playSequence(this.steps[this.state]);
-    } */
   }
 
-  playSequence(sequence: [number, number]): void {
+  playSequence(step: Step): void {
     this.isReady.pipe(filter(state => state === true)).subscribe(() => {
-      this.animation.playSegments([[0, 20], [20, 10]], true);
-      this.animation.loop = true;
+      this.animation.playSegments([step.from, step.to], true);
+      this.animation.loop = step.loop;
     });
   }
 

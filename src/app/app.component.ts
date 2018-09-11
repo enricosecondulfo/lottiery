@@ -5,7 +5,7 @@ import {
   AfterViewInit,
   ViewChild
 } from '@angular/core';
-import { LottieryStateView } from 'projects/lottiery-lib/src/public_api';
+import { LottieryStateView, Step } from 'projects/lottiery-lib/src/public_api';
 
 @Component({
   selector: 'app-root',
@@ -13,15 +13,26 @@ import { LottieryStateView } from 'projects/lottiery-lib/src/public_api';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  @ViewChild(LottieryStateView) stateView: LottieryStateView;
+  @ViewChild(LottieryStateView)
+  stateView: LottieryStateView;
 
   autoPlay = false;
   loop = true;
   speed = 1.5;
-  steps = [[0, 33], [33, 0]];
-  state = 0;
+  steps: Step[] = [
+    {
+      from: 0,
+      to: 33,
+      loop: true
+    },
+    {
+      from: 33,
+      to: 0,
+      loop: false
+    }
+  ];
 
-  numbers: number[];
+  state = 0;
 
   onComplete(): void {
     console.log('completed animation');

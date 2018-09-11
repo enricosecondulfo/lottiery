@@ -43,9 +43,7 @@ export class LottieryView implements AfterViewInit, OnDestroy {
     this.addListeners();
   }
 
-  create(): void {
-    const loop: boolean = this.loop || false;
-
+  private create(): void {
     const options = {
       container: this.container.nativeElement,
       path: this.path || '',
@@ -56,6 +54,9 @@ export class LottieryView implements AfterViewInit, OnDestroy {
 
     this.animation = Lottie.loadAnimation(options);
     this.animation.setSpeed(this.speed || 1);
+  }
+
+  play(): void {
     this.animation.play();
   }
 
