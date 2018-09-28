@@ -9,9 +9,9 @@ import {
   SimpleChanges
 } from '@angular/core';
 import * as Lottie from 'lottie-web';
-import { BehaviorSubject } from 'rxjs';
-import { filter } from 'rxjs/operators';
-import { Step } from './step';
+import { BehaviorSubject, Subject } from 'rxjs';
+import { filter, takeUntil } from 'rxjs/operators';
+import { Step, Frame } from './step';
 
 @Component({
   selector: 'lottiery-state-view',
@@ -37,10 +37,15 @@ export class LottieryStateView implements AfterViewInit, OnChanges, OnDestroy {
   container: ElementRef;
 
   private animation: any;
-  private isReady: BehaviorSubject<boolean>;
+
+  private isReady$: BehaviorSubject<boolean>;
+  private completeAnimation$: Subject<void>;
+
+  private direction = 1;
 
   constructor() {
-    this.isReady = new BehaviorSubject<boolean>(false);
+    this.isReady$ = new BehaviorSubject<boolean>(false);
+    this.completeAnimation$ = new Subject<void>();
   }
 
   ngAfterViewInit(): void {
@@ -58,19 +63,40 @@ export class LottieryStateView implements AfterViewInit, OnChanges, OnDestroy {
 
     this.animation = Lottie.loadAnimation(options);
     this.animation.addEventListener('DOMLoaded', () => {
-      this.isReady.next(true);
+      this.isReady$.next(true);
     });
+
+    /* this.animation.addEventListener('loopComplete', () => {
+      this.direction = this.direction === 1 ? -1 : 1;
+      this.animation.stop();
+      this.animation.setDirection(this.direction);
+      this.animation.play();
+      console.log('loop complete');
+      console.log(this.direction);
+      Lottie.setDirection(this.direction);
+      console.log(this.direction);
+    }); */
   }
 
   playSequence(step: Step): void {
-    this.isReady.pipe(filter(state => state === true)).subscribe(() => {
-      this.animation.playSegments([step.from, step.to], true);
-      this.animation.loop = step.loop;
+    this.isReady$.pipe(filter(state => state === true)).subscribe(() => {
+      this.animation.playSegments(
+        [
+          step.from === Frame.CURRENT
+            ? this.animation.currentFrame + this.animation.firstFrame
+            : step.from,
+          step.to
+        ],
+        step.forceStart || true
+      );
+
+      this.animation.setSpeed(step.speed || 1);
+      this.animation.loop = step.loop || false;
     });
   }
 
   private goToStepSelected(): void {
-    this.playSequence(this.steps[this.state]);
+    this.playSequence(this.steps[this.state])
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -80,8 +106,7 @@ export class LottieryStateView implements AfterViewInit, OnChanges, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    console.log('on destroy');
-    this.isReady.next(false);
+    this.isReady$.next(false);
     this.animation.destroy();
   }
 }
